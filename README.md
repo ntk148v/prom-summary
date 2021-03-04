@@ -1,2 +1,1 @@
-# prom-summary
-Prometheus summary
+# Prometheus Summary
