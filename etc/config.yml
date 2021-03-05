@@ -1,0 +1,19 @@
+prometheus_configs:
+  prometheus1:
+    address: http://localhost:9090
+    basic_auth:
+      username: "admin"
+      password: "secret"
+  prometheus2:
+    address: http://localhost:9091
+    basic_auth:
+      username: "admin"
+      password: "secret"
+output_config:
+  # Format is output format, 'table', 'json', 'csv', 'json'
+  # 'table' by default.
+  format: csv
+  # File is the output file path, by default, Prom-summary will
+  # return output to stdout. If this field is specified,
+  # the output will be written to file instead.
+  file: /tmp/test.csv
