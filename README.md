@@ -11,7 +11,7 @@ ______                      _____
                                                                        |___/
 ```
 
-A lazy tool written by Golang to export Prometheus summary to different format:
+A lazy tool written by Golang to export Prometheus summary in different format:
 
 - JSON.
 - YAML.
