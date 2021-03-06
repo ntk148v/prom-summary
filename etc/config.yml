@@ -11,7 +11,7 @@ prometheus_configs:
       password: "secret"
 output_config:
   # Format is output format, 'table', 'json', 'csv', 'json'
-  # 'table' by default.
+  # 'csv' by default.
   format: csv
   # File is the output file path, by default, Prom-summary will
   # return output to stdout. If this field is specified,

@@ -54,7 +54,7 @@ var (
 	// DefaultOutputConfig is the default output configuration
 	// By default, print the output to stdout/stderr with format table.
 	DefaultOutputConfig = OutputConfig{
-		Format: "table",
+		Format: "csv",
 	}
 
 	// DefaultConfig is the default top-level configuration.
