@@ -37,10 +37,10 @@ import (
 )
 
 var headers = []string{
-	"name", "address", "status", "error", "storage retention",
-	"number of active targets", "number of dropped targets",
-	"number of time series", "number of chunks",
-	"number of ingested samples per seconds",
+	"name", "address", "status", "error",
+	"storage retention", "number of active targets",
+	"number of dropped targets", "number of time series",
+	"number of chunks", "number of ingested samples per seconds",
 }
 
 func initClient(address, username, password string) (prometheus.API, error) {
@@ -132,15 +132,11 @@ func main() {
 			}
 			switch v := val.(type) {
 			case model.Vector:
+				total := 0.0
 				for _, s := range v {
-					j, err := s.MarshalJSON()
-					if err != nil {
-
-						record.setStatus(errors.Wrapf(err, "Error while unmarshalling metrics result"))
-						return
-					}
-					fmt.Println(j)
+					total += float64(s.Value)
 				}
+				record.NumOfIngestedSamplesPerSec = strconv.FormatFloat(total/float64(len(v)), 'E', -1, 64)
 			default:
 				record.setStatus(errors.Errorf("unsupported type: '%q'", v))
 				return
