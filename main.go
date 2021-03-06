@@ -36,21 +36,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// PromSummary is the result format
-type PromSummary struct {
-	Name                       string `json:"name" yaml:"name"`
-	Address                    string `json:"address" yaml:"address"`
-	Status                     string `json:"status" yaml:"status"`
-	StorageRetention           string `json:"storage_retention" yaml:"storage_retention"`
-	NumOfActiveTargets         string `json:"number_of_active_targets" yaml:"number_of_active_targets"`
-	NumOfDroppedTargets        string `json:"number_of_dropped_targets" yaml:"number_of_dropped_targets"`
-	NumOfTimeSeries            string `json:"number_of_time_series" yaml:"number_of_time_series"`
-	NumOfChunks                string `json:"number_of_chunks" yaml:"number_of_chunks"`
-	NumOfIngestedSamplesPerSec string `json:"number_of_ingested_samples_per_seconds" yaml:"number_of_ingested_samples_per_seconds"`
-}
-
 var headers = []string{
-	"name", "address", "status", "storage retention",
+	"name", "address", "status", "error", "storage retention",
 	"number of active targets", "number of dropped targets",
 	"number of time series", "number of chunks",
 	"number of ingested samples per seconds",
@@ -78,7 +65,7 @@ func main() {
 	var (
 		cfgFile string
 		cfg     *Config
-		results []PromSummary
+		results []*PromSummary
 		wg      sync.WaitGroup
 	)
 	a.Flag("config.file", "Prom-summary configuration file path.").
@@ -103,27 +90,25 @@ func main() {
 	for k, v := range cfg.PrometheusConfigs {
 		wg.Add(1)
 		go func(ctx context.Context, promName string, promCfg PrometheusConfig) {
-			record := PromSummary{
+			record := &PromSummary{
 				Name:    promName,
 				Address: promCfg.Address,
-				Status:  "OK",
+				Status:  PromStatusOK,
 			}
 			defer func() {
-				wg.Done()
 				results = append(results, record)
+				wg.Done()
 			}()
 			promAPI, err := initClient(promCfg.Address, promCfg.BasicAuth.Username,
 				promCfg.BasicAuth.Password)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error initializing Prometheus API client"))
-				record.Status = err.Error()
+				record.setStatus(errors.Wrapf(err, "Error initializing Prometheus API client"))
 				return
 			}
 			// Ger number of targets
 			targets, err := promAPI.Targets(context.Background())
 			if err != nil {
-				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error getting targets"))
-				record.Status = err.Error()
+				record.setStatus(errors.Wrapf(err, "Error getting targets"))
 				return
 			}
 			record.NumOfActiveTargets = strconv.Itoa(len(targets.Active))
@@ -131,8 +116,7 @@ func main() {
 			// Get storage retention
 			runtimeInfo, err := promAPI.Runtimeinfo(ctx)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error getting runtime info"))
-				record.Status = err.Error()
+				record.setStatus(errors.Wrapf(err, "Error getting runtime info"))
 				return
 			}
 			record.StorageRetention = runtimeInfo.StorageRetention
@@ -143,8 +127,7 @@ func main() {
 			// Get number of ingested samples per second
 			val, _, err := promAPI.Query(ctx, "rate(prometheus_tsdb_head_samples_appended_total[5m])", time.Now())
 			if err != nil {
-				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error querying metrics"))
-				record.Status = err.Error()
+				record.setStatus(errors.Wrapf(err, "Error querying metrics"))
 				return
 			}
 			switch v := val.(type) {
@@ -152,19 +135,19 @@ func main() {
 				for _, s := range v {
 					j, err := s.MarshalJSON()
 					if err != nil {
-						fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error while unmarshalling metrics result"))
-						record.Status = err.Error()
+
+						record.setStatus(errors.Wrapf(err, "Error while unmarshalling metrics result"))
 						return
 					}
 					fmt.Println(j)
 				}
 			default:
-				record.Status = errors.Errorf("unsupported type: '%q'", v).Error()
-				results = append(results, record)
+				record.setStatus(errors.Errorf("unsupported type: '%q'", v))
 				return
 			}
 		}(ctx, k, v)
 	}
+
 	wg.Wait()
 	switch strings.ToLower(cfg.OutputConfig.Format) {
 	case "table":
@@ -181,8 +164,8 @@ func main() {
 		table.SetAlignment(tablewriter.ALIGN_RIGHT)
 		for _, record := range results {
 			table.Append([]string{
-				record.Name, record.Address, record.Status,
-				record.StorageRetention, record.NumOfActiveTargets,
+				record.Name, record.Address, record.Status.String(),
+				record.Error, record.StorageRetention, record.NumOfActiveTargets,
 				record.NumOfDroppedTargets, record.NumOfTimeSeries,
 				record.NumOfChunks, record.NumOfIngestedSamplesPerSec,
 			})
@@ -217,8 +200,8 @@ func main() {
 		w.Write(headers)
 		for _, record := range results {
 			w.Write([]string{
-				record.Name, record.Address, record.Status,
-				record.StorageRetention, record.NumOfActiveTargets,
+				record.Name, record.Address, record.Status.String(),
+				record.Error, record.StorageRetention, record.NumOfActiveTargets,
 				record.NumOfDroppedTargets, record.NumOfTimeSeries,
 				record.NumOfChunks, record.NumOfIngestedSamplesPerSec,
 			})
