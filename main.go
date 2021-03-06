@@ -149,6 +149,11 @@ func main() {
 	}
 
 	wg.Wait()
+
+	// Write the result
+	if cfg.OutputConfig.File != "" {
+		fmt.Println("You can found the report here ", cfg.OutputConfig.File)
+	}
 	switch strings.ToLower(cfg.OutputConfig.Format) {
 	case "table":
 		writer := os.Stdout
