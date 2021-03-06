@@ -24,6 +24,7 @@ type PromSummary struct {
 	Address                    string     `json:"address" yaml:"address"`
 	Status                     PromStatus `json:"status" yaml:"status"`
 	Error                      string     `json:"error" yaml:"error"`
+	Version                    string     `json:"version" yaml:"version"`
 	StorageRetention           string     `json:"storage_retention" yaml:"storage_retention"`
 	NumOfActiveTargets         string     `json:"number_of_active_targets" yaml:"number_of_active_targets"`
 	NumOfDroppedTargets        string     `json:"number_of_dropped_targets" yaml:"number_of_dropped_targets"`

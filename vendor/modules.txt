@@ -18,7 +18,7 @@ github.com/olekukonko/tablewriter
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/prometheus/client_golang v1.9.0
+# github.com/prometheus/client_golang v1.9.0 => github.com/ntk148v/client_golang v1.9.1-0.20210306080221-9fa2d6cf89bd
 ## explicit
 github.com/prometheus/client_golang/api
 github.com/prometheus/client_golang/api/prometheus/v1

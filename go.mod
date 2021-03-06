@@ -11,3 +11,5 @@ require (
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0
 )
+
+replace github.com/prometheus/client_golang v1.9.0 => github.com/ntk148v/client_golang v1.9.1-0.20210306080221-9fa2d6cf89bd

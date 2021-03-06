@@ -37,7 +37,7 @@ import (
 )
 
 var headers = []string{
-	"name", "address", "status", "error",
+	"name", "address", "status", "error", "version",
 	"storage retention", "number of active targets",
 	"number of dropped targets", "number of time series",
 	"number of chunks", "number of ingested samples per seconds",
@@ -105,6 +105,13 @@ func main() {
 				record.setStatus(errors.Wrapf(err, "Error initializing Prometheus API client"))
 				return
 			}
+			// Get version
+			buildInfo, err := promAPI.Buildinfo(ctx)
+			if err != nil {
+				record.setStatus(errors.Wrapf(err, "Error getting build info"))
+				return
+			}
+			record.Version = buildInfo.Version
 			// Ger number of targets
 			targets, err := promAPI.Targets(context.Background())
 			if err != nil {
@@ -166,9 +173,10 @@ func main() {
 		for _, record := range results {
 			table.Append([]string{
 				record.Name, record.Address, record.Status.String(),
-				record.Error, record.StorageRetention, record.NumOfActiveTargets,
-				record.NumOfDroppedTargets, record.NumOfTimeSeries,
-				record.NumOfChunks, record.NumOfIngestedSamplesPerSec,
+				record.Error, record.Version, record.StorageRetention,
+				record.NumOfActiveTargets, record.NumOfDroppedTargets,
+				record.NumOfTimeSeries, record.NumOfChunks,
+				record.NumOfIngestedSamplesPerSec,
 			})
 		}
 		table.Render()
@@ -202,9 +210,10 @@ func main() {
 		for _, record := range results {
 			w.Write([]string{
 				record.Name, record.Address, record.Status.String(),
-				record.Error, record.StorageRetention, record.NumOfActiveTargets,
-				record.NumOfDroppedTargets, record.NumOfTimeSeries,
-				record.NumOfChunks, record.NumOfIngestedSamplesPerSec,
+				record.Error, record.Version, record.StorageRetention,
+				record.NumOfActiveTargets, record.NumOfDroppedTargets,
+				record.NumOfTimeSeries, record.NumOfChunks,
+				record.NumOfIngestedSamplesPerSec,
 			})
 		}
 	}
